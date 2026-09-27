@@ -93,13 +93,13 @@ export default function WhatsAppEmbeddedSignup({
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  async function handleConnectClick() {
+  function handleConnectClick() {
     if (!sdkReady || !window.FB) return;
     setStatus('connecting');
     capturedWabaData.current = null;
 
     window.FB.login(
-      async (response) => {
+      (response) => {
         const code = response.authResponse?.code;
 
         if (!code) {
@@ -110,30 +110,35 @@ export default function WhatsAppEmbeddedSignup({
 
         setStatus('exchanging');
 
-        try {
-          const res = await fetch(`${apiBaseUrl}/api/embedded-signup/callback`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${authToken}`,
-            },
-            body: JSON.stringify({
-              code,
-              wabaId: capturedWabaData.current?.wabaId,
-            }),
-          });
+        // FB.login's callback must be a plain (non-async) function — the
+        // SDK's own internal validation rejects an async function passed
+        // directly here. Do the actual async work in an inner IIFE instead.
+        (async () => {
+          try {
+            const res = await fetch(`${apiBaseUrl}/api/embedded-signup/callback`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${authToken}`,
+              },
+              body: JSON.stringify({
+                code,
+                wabaId: capturedWabaData.current?.wabaId,
+              }),
+            });
 
-          if (!res.ok) {
-            throw new Error(`Backend exchange failed with status ${res.status}`);
+            if (!res.ok) {
+              throw new Error(`Backend exchange failed with status ${res.status}`);
+            }
+
+            const result = await res.json();
+            setStatus('connected');
+            onConnected?.(result);
+          } catch (err) {
+            setStatus('error');
+            onError?.(err);
           }
-
-          const result = await res.json();
-          setStatus('connected');
-          onConnected?.(result);
-        } catch (err) {
-          setStatus('error');
-          onError?.(err);
-        }
+        })();
       },
       {
         config_id: configId,
