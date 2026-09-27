@@ -1,0 +1,27 @@
+{
+  "name": "whatsapp-saas-starter",
+  "version": "0.1.0",
+  "description": "Starter backend for a multi-tenant WhatsApp bulk messaging SaaS using the Meta Cloud API",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "worker": "node src/queue/campaignWorker.js",
+    "migrate": "node scripts/migrate.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "bcryptjs": "^2.4.3",
+    "bullmq": "^5.12.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "ioredis": "^5.4.1",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.12.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}
